@@ -21,7 +21,7 @@
 //! are assigned to consecutive pins on the RP2040:
 //!
 //! - R1, G1, B1, R2, G2, B2
-//! - ADDRA, ADDRB, ADDRC, ADDRD
+//! - ADDRA, ADDRB, ADDRC, ADDRD, ADDRE
 
 #![no_std]
 #![feature(generic_const_exprs)]
@@ -113,9 +113,9 @@ pub struct DisplayMemory<const W: usize, const H: usize, const B: usize>
 where
     [(); fb_bytes(W, H, B)]: Sized,
 {
-    fbptr: [u32; 1],
-    fb0: [u8; fb_bytes(W, H, B)],
-    fb1: [u8; fb_bytes(W, H, B)],
+    pub fbptr: [u32; 1],
+    pub fb0: [u8; fb_bytes(W, H, B)],
+    pub fb1: [u8; fb_bytes(W, H, B)],
     delays: [u32; B],
     delaysptr: [u32; 1],
 }
@@ -153,6 +153,7 @@ pub struct DisplayPins<F: Function> {
     pub addrb: Pin<DynPinId, F, PullNone>,
     pub addrc: Pin<DynPinId, F, PullNone>,
     pub addrd: Pin<DynPinId, F, PullNone>,
+    pub addre: Pin<DynPinId, F, PullNone>,
     pub lat: Pin<DynPinId, F, PullNone>,
     pub oe: Pin<DynPinId, F, PullNone>,
 }
@@ -164,7 +165,7 @@ where
     CH1: ChannelIndex,
     C: RgbColor,
 {
-    mem: &'static mut DisplayMemory<W, H, B>,
+    pub mem: &'static mut DisplayMemory<W, H, B>,
     fb_loop_ch: Channel<CH1>,
     benchmark: bool,
     brightness: u8,
@@ -282,7 +283,7 @@ where
             );
             let installed = pio_block.install(&program_data.program).unwrap();
             let (mut sm, _, mut tx) = PIOBuilder::from_program(installed)
-                .out_pins(pins.addra.id().num, 4)
+                .out_pins(pins.addra.id().num, 5)
                 .side_set_pin_base(pins.lat.id().num)
                 .clock_divisor_fixed_point(1, 1)
                 .build(row_sm);
@@ -291,6 +292,7 @@ where
                 (pins.addrb.id().num, PinDir::Output),
                 (pins.addrc.id().num, PinDir::Output),
                 (pins.addrd.id().num, PinDir::Output),
+                (pins.addre.id().num, PinDir::Output),
                 (pins.lat.id().num, PinDir::Output),
             ]);
             // Configure the height of the screen

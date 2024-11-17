@@ -3,3 +3,5 @@
 
 examples/*/Cargo.lock
 examples/*/target
+
+**/.DS_Store
